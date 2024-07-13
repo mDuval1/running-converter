@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Running converter</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+      }
+      input {
+        font-size: 16px;
+        padding: 5px;
+      }
+      div {
+        margin: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Welcome to the Running converter page</h1>
+    <div style="display: flex; flex-direction: column">
+      <div style="display: flex; flex-direction: row; align-items: center">
+        <div>
+          <label for="distance" style="margin-right: 8px"
+            >Enter distance in km:</label
+          >
+          <input
+            type="number"
+            id="distance"
+            placeholder="Distance"
+            oninput="updateDistance()"
+            value="10"
+            style="width: 200px"
+            step="0.5"
+          />
+        </div>
+        <div>
+          <button onclick="setDistance(0.8)()">800m</button>
+          <button onclick="setDistance(1.5)()">1500m</button>
+          <button onclick="setDistance(3)()">3K</button>
+          <button onclick="setDistance(5)()">5K</button>
+          <button onclick="setDistance(10)()">10K</button>
+          <button onclick="setDistance(21.0975)()">half</button>
+          <button onclick="setDistance(42.195)()">marathon</button>
+          <button onclick="setDistance(100)()">100K</button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: row; align-items: center">
+        <label for="time" style="margin-right: 8px">Enter time</label>
+        <input
+          type="time"
+          id="time"
+          placeholder="Time"
+          value="01:00:00"
+          oninput="updateTime()"
+          style="width: 200px"
+          step="10"
+        />
+      </div>
+      <hr />
+      <div style="display: flex; flex-direction: row; align-items: center">
+        <div>
+          <label for="time" style="margin-right: 8px"
+            >Enter speed in kmh:</label
+          >
+          <input
+            type="number"
+            id="speed-kmh"
+            placeholder="Speed"
+            value="10"
+            oninput="updateSpeedKmh()"
+            style="width: 200px"
+            step="0.1"
+          />
+        </div>
+        <div>
+          <button onclick="setSpeedKmh(10)()">10kmh</button>
+          <button onclick="setSpeedKmh(12)()">12kmh</button>
+          <button onclick="setSpeedKmh(15)()">15kmh</button>
+          <button onclick="setSpeedKmh(18)()">18kmh</button>
+          <button onclick="setSpeedKmh(20)()">20kmh</button>
+          <button onclick="setSpeedKmh(25)()">25kmh</button>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: row; align-items: center">
+        <label for="time" style="margin-right: 8px"
+          >Enter speed in mn/km:</label
+        >
+        <input
+          type="time"
+          id="speed-min"
+          placeholder="Speed (min/km)"
+          value="00:06:00"
+          oninput="updateSpeedMin()"
+          style="width: 200px"
+          step="1"
+        />
+      </div>
+      <script>
+        function setDistance(distance) {
+          return function () {
+            document.getElementById("distance").value = distance;
+            updateDistance();
+          };
+        }
+        function setSpeedKmh(speed) {
+          return function () {
+            document.getElementById("speed-kmh").value = speed;
+            updateSpeedKmh();
+          };
+        }
+        function updateTime() {
+          // Changes speed
+          const speed = getSpeed();
+          setSpeed(speed, true);
+          setSpeed(speed, false);
+        }
+        function updateDistance() {
+          // Changes speed
+          const speed = getSpeed();
+          setSpeed(speed, true);
+          setSpeed(speed, false);
+        }
+        function setTimeFromHours(hours) {
+          const date = new Date();
+          const hoursIntegers = Math.floor(hours).toString().padStart(2, "0");
+          const minutes = Math.floor((hours - hoursIntegers) * 60)
+            .toString()
+            .padStart(2, "0");
+          const seconds = (Math.floor((hours - hoursIntegers) * 3600) % 60)
+            .toString()
+            .padStart(2, "0");
+          const timeString = `${hoursIntegers}:${minutes}:${seconds}`;
+          setTime(timeString);
+        }
+        function updateSpeedKmh() {
+          // Changes time and speed mn/km
+          const speed = parseFloat(document.getElementById("speed-kmh").value); // km/h
+          setSpeed(speed, true);
+          const distance = document.getElementById("distance").value; // km
+          const hours = distance / speed; // h
+          setTimeFromHours(hours);
+        }
+        function updateSpeedMin() {
+          // Changes time and speed mn/km
+          const timeParts = document
+            .getElementById("speed-min")
+            .value.split(":");
+          const hoursSpeed = parseInt(timeParts[0]);
+          const minutesSpeed = parseInt(timeParts[1]);
+          const secondsSpeed = parseInt(timeParts[2]);
+          const hoursPerKm =
+            hoursSpeed + minutesSpeed / 60 + secondsSpeed / 3600; // h
+          const speedInKmH = 1 / hoursPerKm; // km/h
+          setSpeed(speedInKmH, false);
+          const distance = document.getElementById("distance").value; // km
+          const hours = distance / speedInKmH; // h
+          setTimeFromHours(hours);
+        }
+
+        function getSpeed() {
+          const distance = document.getElementById("distance").value; // km
+          const time = document.getElementById("time").value;
+          const timeParts = time.split(":");
+          const hours = parseInt(timeParts[0]);
+          const minutes = parseInt(timeParts[1]);
+          const seconds = parseInt(timeParts[2]);
+          const totalSeconds = hours * 3600 + minutes * 60 + seconds; // s
+          const speed = (distance / totalSeconds) * 3600; // km/h
+          return speed;
+        }
+
+        function setSpeed(speed, changeMn) {
+          if (!changeMn) {
+            document.getElementById("speed-kmh").value = speed.toFixed(2);
+          } else {
+            const hourPerKm = 1 / speed;
+            const hourPerKmInteger = Math.floor(hourPerKm)
+              .toString()
+              .padStart(2, "0");
+            const minPerKm = Math.floor((hourPerKm - hourPerKmInteger) * 60)
+              .toString()
+              .padStart(2, "0");
+            const secPerKm = (
+              Math.floor((hourPerKm - hourPerKmInteger) * 3600) % 60
+            )
+              .toString()
+              .padStart(2, "0");
+            const timeString = `${hourPerKmInteger}:${minPerKm}:${secPerKm}`;
+            document.getElementById("speed-min").value = timeString;
+          }
+        }
+
+        function setTime(time) {
+          // hh:mm:ss
+          document.getElementById("time").value = time;
+        }
+      </script>
+    </div>
+  </body>
+</html>
